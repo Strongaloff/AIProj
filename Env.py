@@ -1,14 +1,24 @@
 import random as rand
 from os import system
 import time
+import numpy as np
 def clear():
-    system("clear")
+    system("cls")
 
 class Board_2048:
+
     def __init__(self,board_size ):
         self.dim=board_size
         self.board_size=(board_size*3)-2
-        self.board=[[0 for i in range(self.board_size)] for j in range(self.board_size) ]
+        self.board=np.array([[0 for i in range(self.board_size)] for j in range(self.board_size) ])
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                if self.check_in_board(i,j)==False:
+                    self.board[i][j]=1
+        self.reset()
+
+    def reset(self):    
+        self.board=np.array([[0 for i in range(self.board_size)] for j in range(self.board_size) ])
         for i in range(self.board_size):
             for j in range(self.board_size):
                 if self.check_in_board(i,j)==False:
@@ -25,12 +35,7 @@ class Board_2048:
             i=rand.randint(0,self.board_size-1)
             j=rand.randint(0,self.board_size-1)
             val=rand.randint(1,2)
-       #for test
-        # self.board[3][0]=4
-        # self.board[2][0]=2
-        # self.board[3][1]=4  
-        # self.board[3][2]=2   
-        # self.board[3][3]=2   
+
     def print_board(self):
         for i in self.board:
             row=''
@@ -41,26 +46,7 @@ class Board_2048:
                     row+=str(i[j])+" "
             print(row)
 
-    
-    def check_game_over(self):
-        for row in self.board:
-            if 0 in row:
-                return False
-        for i in range(0,self.board_size-2):
-            for j in range(1,self.board_size-2):
-                if self.check_brothers(i,j)==True:
-                    return False
 
-        return True
-
-    def check_brothers(self,i,j):
-        if(
-            self.board[i][j]==self.board[i][j+1] or \
-            self.board[i][j]==self.board[i][j-1] or \
-            self.board[i][j]==self.board[i+1][j] or \
-            self.board[i][j]==self.board[i-1][j]):
-            return True
-        return False
 
     #Get the state of the game 
     def get_state(self):
@@ -83,9 +69,7 @@ class Board_2048:
         j=rand.randint(0,self.board_size-1)
         while counter!=0:
             if(self.check_in_board(i,j)==True and self.board[i][j]==0):
-                # self.board[i][j]=2
                 self.board[i][j]=piece*2
-
                 counter-=1
             i=rand.randint(0,self.board_size-1)
             j=rand.randint(0,self.board_size-1)
@@ -96,8 +80,9 @@ class Board_2048:
             "2" -> down \n
             "3" -> left \n
             return next state and if the game is over or not 
-        '''
 
+        '''
+        reward=0
         if(direction==0):
             #up
             # print("UP")
@@ -105,14 +90,17 @@ class Board_2048:
                 for i in range(1,self.board_size):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
                         newPozI=i-1
+                        '''While you it can move to a specific direction move  '''
                         while (
                             self.board[newPozI][j]==0 and \
                             self.board[newPozI][j]!=1 and \
                             newPozI>0
                             ):
                             newPozI-=1
+                        ''' If it hits something verifi if it's same number piece out of the table or wall '''
                         if self.board[i][j]==self.board[newPozI][j]:
                             self.board[newPozI][j]*=2
+                            reward+=self.board[newPozI][j]
                             self.board[i][j]=0
                         elif self.board[newPozI][j]==0:
                             self.board[newPozI][j]=self.board[i][j]
@@ -121,7 +109,7 @@ class Board_2048:
                             if newPozI+1!=i:
                                 self.board[newPozI+1][j]=self.board[i][j]
                                 self.board[i][j]=0
-
+        """ Same for the rest """
         elif(direction==1):
             #right
             # print("RIGHT")
@@ -137,6 +125,7 @@ class Board_2048:
                             newPozJ+=1
                         if self.board[i][newPozJ]==self.board[i][j]:
                             self.board[i][newPozJ]*=2
+                            reward+=self.board[i][newPozJ]
                             self.board[i][j]=0
                         elif self.board[i][newPozJ]==0:
                             self.board[i][newPozJ]=self.board[i][j]
@@ -161,6 +150,7 @@ class Board_2048:
                             newPozI+=1
                         if self.board[i][j]==self.board[newPozI][j]:
                             self.board[newPozI][j]*=2
+                            reward+=self.board[newPozI][j]
                             self.board[i][j]=0
                         elif self.board[newPozI][j]==0:
                             self.board[newPozI][j]=self.board[i][j]
@@ -186,6 +176,7 @@ class Board_2048:
                             newPozJ-=1
                         if self.board[i][newPozJ]==self.board[i][j]:
                             self.board[i][newPozJ]*=2
+                            reward+=self.board[i][newPozJ]
                             self.board[i][j]=0
                         elif self.board[i][newPozJ]==0:
                             self.board[i][newPozJ]=self.board[i][j]
@@ -195,10 +186,28 @@ class Board_2048:
                                 self.board[i][newPozJ+1]=self.board[i][j]
                                 self.board[i][j]=0
 
-        if (self.check_game_over() ==True):
-            return self.get_state(), True
+        
+        return self.get_state(), reward
 
-
+    def posible_moves(self):
+        moves=[]
+        for j in range(self.board_size-1):
+            for i in range(1,self.board_size-2):
+                if (self.board[i][j]==self.board[i+1][j] or self.board[i][j]==self.board[i-1][j])\
+                    and self.board[i][j]!=1 or self.board[i][j]==0:
+                    moves.append(0)
+                    moves.append(2)
+                    break
+            break
+        for i in range(self.board_size-1):
+            for j in range(1,self.board_size-1):
+                if (self.board[i][j]==self.board[i][j+1] or self.board[i][j]==self.board[i][j-1])\
+                    and self.board[i][j]!=1 or self.board[i][j]==0:
+                    moves.append(1)
+                    moves.append(3)
+                    break
+            break
+        return sorted(moves)
     def check_in_board(self, i,j):
         if((i<self.dim-1 or i>=self.board_size-self.dim+1) and (j>self.dim-1 and j<self.board_size-self.dim )):
             return False
@@ -209,11 +218,5 @@ class Board_2048:
 env= Board_2048(2)
 i=0
 env.print_board()
-# while i<5:
-while env.check_game_over()==False:
-    clear()
-    env.make_a_move(rand.randint(0,3))
-    env.spawn_new_piece()
-    env.print_board()
-    time.sleep(0.1)
-    i+=1
+
+print(env.posible_moves())
