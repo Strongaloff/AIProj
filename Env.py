@@ -84,7 +84,7 @@ class Board_2048:
         reward=0
         if(direction==0):
             #up
-            # print("UP")
+            print("UP")
             for j in range (self.board_size):
                 for i in range(1,self.board_size):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
@@ -110,7 +110,7 @@ class Board_2048:
                                 self.board[i][j]=0
         elif(direction==1):
             #right
-            # print("RIGHT")
+            print("RIGHT")
             for i in range(self.board_size):
                 for j in range (self.board_size-2,-1,-1):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i][j+1]!=1 and j!=self.board_size-1):
@@ -134,7 +134,7 @@ class Board_2048:
                                 self.board[i][j]=0
         elif direction==2:
             #down
-            # print("DOWN")
+            print("DOWN")
             for j in range (self.board_size):
                 for i in range(self.board_size-2,-1,-1):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i+1][j]!=1 ):
@@ -158,7 +158,7 @@ class Board_2048:
                                 self.board[newPozI-1][j]=self.board[i][j]
                                 self.board[i][j]=0
         elif direction==3:
-            # print("LEFT")
+            print("LEFT")
             for i in range(self.board_size):
                 for j in range (1,self.board_size):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1  and j!=0 and self.board[i][j-1]!=1 ):
@@ -182,7 +182,7 @@ class Board_2048:
                             if newPozJ+1!=j:
                                 self.board[i][newPozJ+1]=self.board[i][j]
                                 self.board[i][j]=0
-        env.spawn_new_piece()
+        self.spawn_new_piece()
         self.score+=reward
         game_over=False
         if len(self.posible_moves())==0:
@@ -233,8 +233,6 @@ class Board_2048:
             return False
         return True 
 
-env= Board_2048(2)
-i=0
 '''
 Posible moves test
 '''
@@ -251,25 +249,4 @@ Posible moves test
 #     [2,2,4,0]
 # ])
 
-
-env.print_board()
-
 ''' For random moves play'''
-
-total_reward=0
-move=rand.choice( env.posible_moves())
-env.print_board()
-reward,game_over=env.make_a_move(move)
-total_reward+=reward
-    
-while game_over==False:
-    clear()
-    move=rand.choice(env.posible_moves())
-    env.print_board()
-    reward,game_over=env.make_a_move(move)
-    total_reward+=reward
-    time.sleep(0.1)
-print('\n')
-env.print_board()
-print('\n')
-print(total_reward)
