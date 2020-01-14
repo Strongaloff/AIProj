@@ -9,7 +9,7 @@ class Agent:
 
     # Deep Q Learning Agent + Maximin
 
-    # Args:
+    # Args: 
     #     state_size (int): Size of the input domain
     #     mem_size (int): Size of the replay buffer
     #     discount (float): How important is the future rewards compared to the immediate ones [0,1]
