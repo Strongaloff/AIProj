@@ -26,10 +26,10 @@ def clear():
 # render_delay = None
 # activations = ['relu', 'relu', 'linear']
 
-
+boardSize = 2
 class GameGrid(Frame):
     def __init__(self):
-        self.Environment = Env.Board_2048(2)
+        self.Environment = Env.Board_2048(boardSize)
         Frame.__init__(self)
 
         # agent = Agent.Agent(2,
@@ -39,15 +39,6 @@ class GameGrid(Frame):
 
         self.grid()
         self.master.title('2048')
-        # self.master.bind("<Key>", self.key_down)
-
-        # self.gamelogic = gamelogic
-        # self.commands = {c.KEY_UP: logic.up, c.KEY_DOWN: logic.down,
-        #                 c.KEY_LEFT: logic.left, c.KEY_RIGHT: logic.right,
-        #                 c.KEY_UP_ALT: logic.up, c.KEY_DOWN_ALT: logic.down,
-        #                 c.KEY_LEFT_ALT: logic.left, c.KEY_RIGHT_ALT: logic.right,
-        #                 c.KEY_H: logic.left, c.KEY_L: logic.right,
-        #                 c.KEY_K: logic.up, c.KEY_J: logic.down}
 
         self.grid_cells = []
         self.init_grid()
@@ -59,6 +50,13 @@ class GameGrid(Frame):
         self.mainloop()
 
     def init_grid(self):
+        if boardSize == 2:
+            basedFont = ("Verdana", 40, "bold")
+        elif boardSize == 3 or boardSize == 4:
+            basedFont = ("Verdana", 20, "bold")
+        elif boardSize == 5:
+            basedFont = ("Verdana", 10, "bold")
+
         background = Frame(self, bg=const.BACKGROUND_COLOR_GAME,
                            width=const.SIZE, height=const.SIZE)
         background.grid()
@@ -73,7 +71,7 @@ class GameGrid(Frame):
                           pady=const.GRID_PADDING)
                 t = Label(master=cell, text="",
                           bg=const.BACKGROUND_COLOR_CELL_EMPTY,
-                          justify=CENTER, font=const.FONT, width=5, height=2)
+                          justify=CENTER, font=basedFont, width=5, height=2)
                 t.grid()
                 grid_row.append(t)
 
