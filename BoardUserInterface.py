@@ -1,5 +1,5 @@
 import Env as Env
-import Agent_2048 as Agent
+# import Agent_2048 as Agent
 import Constants as const
 import random as rand
 from tkinter import *
@@ -11,19 +11,20 @@ from multiprocessing import Pool
 def clear():
     system("cls")
 
-episodes = 2000
-max_steps = None
-epsilon_stop_episode = 1500
-mem_size = 20000
-discount = 0.95
-batch_size = 512
-epochs = 1
-render_every = 50
-replay_start_size = 2000
-train_every = 1
-n_neurons = [32, 32]
-render_delay = None
-activations = ['relu', 'relu', 'linear']
+
+# episodes = 2000
+# max_steps = None
+# epsilon_stop_episode = 1500
+# mem_size = 20000
+# discount = 0.95
+# batch_size = 512
+# epochs = 1
+# render_every = 50
+# replay_start_size = 2000
+# train_every = 1
+# n_neurons = [32, 32]
+# render_delay = None
+# activations = ['relu', 'relu', 'linear']
 
 
 class GameGrid(Frame):
@@ -31,10 +32,10 @@ class GameGrid(Frame):
         self.Environment = Env.Board_2048(2)
         Frame.__init__(self)
 
-        agent = Agent.Agent(2,
-                            n_neurons=n_neurons, activations=activations,
-                            epsilon_stop_episode=epsilon_stop_episode, mem_size=mem_size,
-                            discount=discount, replay_start_size=replay_start_size)
+        # agent = Agent.Agent(2,
+        #                     n_neurons=n_neurons, activations=activations,
+        #                     epsilon_stop_episode=epsilon_stop_episode, mem_size=mem_size,
+        #                     discount=discount, replay_start_size=replay_start_size)
 
         self.grid()
         self.master.title('2048')
@@ -114,6 +115,8 @@ class GameGrid(Frame):
         self.Environment.print_board()
         print('\n')
         print(total_reward)
+        time.sleep(5)
+        exit()
 
 
 gamegrid = GameGrid()

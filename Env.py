@@ -31,7 +31,7 @@ class Board_2048:
             if(self.check_in_board(i,j)==True):
                 self.board[i][j]=val*2
                 counter-=1
-                print(i,j)
+                # print(i,j)
             i=rand.randint(0,self.board_size-1)
             j=rand.randint(0,self.board_size-1)
             val=rand.randint(1,2)
@@ -45,7 +45,7 @@ class Board_2048:
                     row+="  "
                 else:
                     row+=str(i[j])+" "
-            print(row)
+            # print(row)
 
     #Get the state of the game 
     def get_state(self):
@@ -79,12 +79,11 @@ class Board_2048:
             "2" -> down \n
             "3" -> left \n
             return next state and if the game is over or not 
-
         '''
         reward=0
         if(direction==0):
             #up
-            print("UP")
+            # print("UP")
             for j in range (self.board_size):
                 for i in range(1,self.board_size):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
@@ -110,7 +109,7 @@ class Board_2048:
                                 self.board[i][j]=0
         elif(direction==1):
             #right
-            print("RIGHT")
+            # print("RIGHT")
             for i in range(self.board_size):
                 for j in range (self.board_size-2,-1,-1):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i][j+1]!=1 and j!=self.board_size-1):
@@ -134,7 +133,7 @@ class Board_2048:
                                 self.board[i][j]=0
         elif direction==2:
             #down
-            print("DOWN")
+            # print("DOWN")
             for j in range (self.board_size):
                 for i in range(self.board_size-2,-1,-1):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i+1][j]!=1 ):
@@ -158,7 +157,7 @@ class Board_2048:
                                 self.board[newPozI-1][j]=self.board[i][j]
                                 self.board[i][j]=0
         elif direction==3:
-            print("LEFT")
+            # print("LEFT")
             for i in range(self.board_size):
                 for j in range (1,self.board_size):
                     if(self.board[i][j]!=0 and self.board[i][j]!=1  and j!=0 and self.board[i][j-1]!=1 ):
@@ -250,3 +249,4 @@ Posible moves test
 # ])
 
 ''' For random moves play'''
+
