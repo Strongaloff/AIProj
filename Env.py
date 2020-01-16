@@ -1,7 +1,9 @@
+
 import random as rand
 from os import system
 import time
 import numpy as np
+import math
 def clear():
     system("cls")
 
@@ -36,6 +38,8 @@ class Board_2048:
             j=rand.randint(0,self.board_size-1)
             val=rand.randint(1,2)
         self.score=0
+        self.max_invalid=0
+        return self.board
 
     def print_board(self):
         for i in self.board:
@@ -45,12 +49,35 @@ class Board_2048:
                     row+="  "
                 else:
                     row+=str(i[j])+" "
-            # print(row)
+            print(row)
 
+
+    def get_next_state(self,move):
+        board=self.board
+        self.make_a_move(move)
+        return_board=self.board
+        self.board=board
+        return move,return_board
+
+    def get_next_states(self):
+        state=[]
+        for i in self.posible_moves():
+            state.append(self.get_next_state(i))
+        return state 
     #Get the state of the game 
     def get_state(self):
-        return self.board
+        return_board=[]
+        new_board=self.board.reshape(self.board_size**2)
+        for i in new_board:
+            if i!=0:
+                return_board.append(math.log2(i))
+            else:
+                return_board.append(i)
+        return_board=np.array(return_board)
+        return (return_board/max(return_board)).reshape(self.board_size**2)
 
+    def get_state_predict(self):
+        return self.board.reshape(1,self.board_size**2)
 
     """
     Create a variable that give a procent for spaw of a piece 80% for a 2 and 20% for a 4 
@@ -80,114 +107,124 @@ class Board_2048:
             "3" -> left \n
             return next state and if the game is over or not 
         '''
-        reward=0
-        if(direction==0):
-            #up
-            # print("UP")
-            for j in range (self.board_size):
-                for i in range(1,self.board_size):
-                    if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
-                        newPozI=i-1
-                        '''While you it can move to a specific direction move  '''
-                        while (
-                            self.board[newPozI][j]==0 and \
-                            self.board[newPozI][j]!=1 and \
-                            newPozI>0
-                            ):
-                            newPozI-=1
-                        ''' If it hits something verifi if it's same number piece, out of the table or wall '''
-                        if self.board[i][j]==self.board[newPozI][j]:
-                            self.board[newPozI][j]*=2
-                            reward+=self.board[newPozI][j]
-                            self.board[i][j]=0
-                        elif self.board[newPozI][j]==0:
-                            self.board[newPozI][j]=self.board[i][j]
-                            self.board[i][j]=0
-                        else:
-                            if newPozI+1!=i:
-                                self.board[newPozI+1][j]=self.board[i][j]
+        # print(direction)
+        valid_move=True
+        if(self.check_valid_move(direction)!=False):
+            reward=0
+            self.max_invalid=0
+            if(direction==0):
+                #up
+                # print("UP")
+                for j in range (self.board_size):
+                    for i in range(1,self.board_size):
+                        if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
+                            newPozI=i-1
+                            '''While you it can move to a specific direction move  '''
+                            while (
+                                self.board[newPozI][j]==0 and \
+                                self.board[newPozI][j]!=1 and \
+                                newPozI>0
+                                ):
+                                newPozI-=1
+                            ''' If it hits something verifi if it's same number piece, out of the table or wall '''
+                            if self.board[i][j]==self.board[newPozI][j]:
+                                self.board[newPozI][j]*=2
+                                reward+=self.board[newPozI][j]
                                 self.board[i][j]=0
-        elif(direction==1):
-            #right
-            # print("RIGHT")
-            for i in range(self.board_size):
-                for j in range (self.board_size-2,-1,-1):
-                    if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i][j+1]!=1 and j!=self.board_size-1):
-                        newPozJ=j+1
-                        while (
-                            self.board[i][newPozJ]==0 and \
-                            self.board[i][newPozJ]!=1 and\
-                            newPozJ<self.board_size-1
-                            ):
-                            newPozJ+=1
-                        if self.board[i][newPozJ]==self.board[i][j]:
-                            self.board[i][newPozJ]*=2
-                            reward+=self.board[i][newPozJ]
-                            self.board[i][j]=0
-                        elif self.board[i][newPozJ]==0:
-                            self.board[i][newPozJ]=self.board[i][j]
-                            self.board[i][j]=0
-                        else:
-                            if newPozJ-1!=j:
-                                self.board[i][newPozJ-1]=self.board[i][j]
+                            elif self.board[newPozI][j]==0:
+                                self.board[newPozI][j]=self.board[i][j]
                                 self.board[i][j]=0
-        elif direction==2:
-            #down
-            # print("DOWN")
-            for j in range (self.board_size):
-                for i in range(self.board_size-2,-1,-1):
-                    if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i+1][j]!=1 ):
-                        newPozI=i+1
-                        # print("This is the element ",self.board[i][j],i,j)
-                        while (
-                            self.board[newPozI][j]==0 and\
-                            self.board[newPozI][j]!=1 and \
-                            newPozI<self.board_size-1
-                            ):
-                            newPozI+=1
-                        if self.board[i][j]==self.board[newPozI][j]:
-                            self.board[newPozI][j]*=2
-                            reward+=self.board[newPozI][j]
-                            self.board[i][j]=0
-                        elif self.board[newPozI][j]==0:
-                            self.board[newPozI][j]=self.board[i][j]
-                            self.board[i][j]=0
-                        else:
-                            if newPozI-1!=i:
-                                self.board[newPozI-1][j]=self.board[i][j]
+                            else:
+                                if newPozI+1!=i:
+                                    self.board[newPozI+1][j]=self.board[i][j]
+                                    self.board[i][j]=0
+            elif(direction==1):
+                #right
+                # print("RIGHT")
+                for i in range(self.board_size):
+                    for j in range (self.board_size-2,-1,-1):
+                        if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i][j+1]!=1 and j!=self.board_size-1):
+                            newPozJ=j+1
+                            while (
+                                self.board[i][newPozJ]==0 and \
+                                self.board[i][newPozJ]!=1 and\
+                                newPozJ<self.board_size-1
+                                ):
+                                newPozJ+=1
+                            if self.board[i][newPozJ]==self.board[i][j]:
+                                self.board[i][newPozJ]*=2
+                                reward+=self.board[i][newPozJ]
                                 self.board[i][j]=0
-        elif direction==3:
-            # print("LEFT")
-            for i in range(self.board_size):
-                for j in range (1,self.board_size):
-                    if(self.board[i][j]!=0 and self.board[i][j]!=1  and j!=0 and self.board[i][j-1]!=1 ):
-                        newPozJ=j-1
-                        # print("This is the element ",self.board[i][j],i,j)
-                        while (
-                            self.board[i][newPozJ]==0 and\
-                            self.board[i][newPozJ]!=1 and \
-                            newPozJ>0
-                            ):
+                            elif self.board[i][newPozJ]==0:
+                                self.board[i][newPozJ]=self.board[i][j]
+                                self.board[i][j]=0
+                            else:
+                                if newPozJ-1!=j:
+                                    self.board[i][newPozJ-1]=self.board[i][j]
+                                    self.board[i][j]=0
+            elif direction==2:
+                #down
+                # print("DOWN")
+                for j in range (self.board_size):
+                    for i in range(self.board_size-2,-1,-1):
+                        if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i+1][j]!=1 ):
+                            newPozI=i+1
+                            # print("This is the element ",self.board[i][j],i,j)
+                            while (
+                                self.board[newPozI][j]==0 and\
+                                self.board[newPozI][j]!=1 and \
+                                newPozI<self.board_size-1
+                                ):
+                                newPozI+=1
+                            if self.board[i][j]==self.board[newPozI][j]:
+                                self.board[newPozI][j]*=2
+                                reward+=self.board[newPozI][j]
+                                self.board[i][j]=0
+                            elif self.board[newPozI][j]==0:
+                                self.board[newPozI][j]=self.board[i][j]
+                                self.board[i][j]=0
+                            else:
+                                if newPozI-1!=i:
+                                    self.board[newPozI-1][j]=self.board[i][j]
+                                    self.board[i][j]=0
+            elif direction==3:
+                # print("LEFT")
+                for i in range(self.board_size):
+                    for j in range (1,self.board_size):
+                        if(self.board[i][j]!=0 and self.board[i][j]!=1  and j!=0 and self.board[i][j-1]!=1 ):
+                            newPozJ=j-1
+                            # print("This is the element ",self.board[i][j],i,j)
+                            while (
+                                self.board[i][newPozJ]==0 and\
+                                self.board[i][newPozJ]!=1 and \
+                                newPozJ>0
+                                ):
 
-                            newPozJ-=1
-                        if self.board[i][newPozJ]==self.board[i][j]:
-                            self.board[i][newPozJ]*=2
-                            reward+=self.board[i][newPozJ]
-                            self.board[i][j]=0
-                        elif self.board[i][newPozJ]==0:
-                            self.board[i][newPozJ]=self.board[i][j]
-                            self.board[i][j]=0
-                        else:
-                            if newPozJ+1!=j:
-                                self.board[i][newPozJ+1]=self.board[i][j]
+                                newPozJ-=1
+                            if self.board[i][newPozJ]==self.board[i][j]:
+                                self.board[i][newPozJ]*=2
+                                reward+=self.board[i][newPozJ]
                                 self.board[i][j]=0
-        self.spawn_new_piece()
-        self.score+=reward
-        game_over=False
-        if len(self.posible_moves())==0:
-            game_over=True
-        return reward,game_over
-
+                            elif self.board[i][newPozJ]==0:
+                                self.board[i][newPozJ]=self.board[i][j]
+                                self.board[i][j]=0
+                            else:
+                                if newPozJ+1!=j:
+                                    self.board[i][newPozJ+1]=self.board[i][j]
+                                    self.board[i][j]=0
+            if valid_move==True:    
+                self.spawn_new_piece()
+            self.score+=reward
+            game_over=False
+            if len(self.posible_moves())==0:
+                game_over=True
+            return reward,game_over
+        else:
+            self.max_invalid+=1
+            if(self.max_invalid==10):
+                return -4,True
+            else:
+                return -2,False
     def get_score(self):
         return self.score
 
@@ -249,4 +286,3 @@ Posible moves test
 # ])
 
 ''' For random moves play'''
-
