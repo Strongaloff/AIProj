@@ -1,266 +1,176 @@
 
-import random as rand
+import random as r
 from os import system
 import time
-import numpy as np
+import numpy as n
 import math
+import copy
 def clear():
     system("cls")
+#Best
+WEIGHT_MATRIX = n.array([
+    [4, 5, 6, 7],
+    [3, 4, 5, 6],
+    [2, 3, 4, 5],
+    [1, 2, 3, 4]
+])
+
+
+# WEIGHT_MATRIX = n.array([
+#     [6.5, 7, 8, 10],
+#     [3, 1, .7, .5],
+#     [-2, -1.8, -1.5, -.5],
+#     [-3, -3.5, -3.7, -3.8]
+# ])
+# WEIGHT_MATRIX=n.array([
+#     [13 ,14 ,15 ,16 ],
+#     [9  ,10 ,11 ,12 ],
+#     [5  ,6  ,7  ,8  ],
+#     [1  ,2  ,3  ,4  ]
+# ])
+# WEIGHT_MATRIX=n.array([
+#     [13 ,14 ,15 ,16 ],
+#     [12  ,11 ,10 ,9 ],
+#     [5  ,6  ,7  ,8  ],
+#     [4  ,3  ,2  ,1  ]
+# ])
+
+# WEIGHT_MATRIX = n.array([
+#     [20, 20, 30, 50],
+#     [15, 15, 20, 30],
+#     [0, 0, 5, 15],
+#     [-15, -10, -5, -5]
+# ])
+WEIGHT_MATRIX2 = [
+    [2048, 1024, 64 , 32 ],
+    [512 , 128 , 16 , 16 ],
+    [256 , 8   , 4  , 2  ],
+    [8   , 4   , 2  , 1  ]
+]
+
+# WEIGHT_MATRIX = n.array([
+#     [8192, 16384 , 32768,65536 ],
+# #     [4096,2048 , 1024  , 512 ],
+#     [512,1034 , 2048 , 4096 ],
+#     [32 ,64   ,128  , 256  ],
+#     [2   , 4   , 8  , 16  ]
+# ])
 
 class Board_2048:
-
+    
     def __init__(self,board_size ):
         self.dim=board_size
         self.board_size=(board_size*3)-2
-        self.board=np.array([[0 for i in range(self.board_size)] for j in range(self.board_size) ])
-        for i in range(self.board_size):
-            for j in range(self.board_size):
-                if self.check_in_board(i,j)==False:
-                    self.board[i][j]=1
         self.reset()
 
     def reset(self):    
-        self.board=np.array([[0 for i in range(self.board_size)] for j in range(self.board_size) ])
+        self.board=n.array([[0 for i in range(self.board_size)] for j in range(self.board_size) ])
         for i in range(self.board_size):
             for j in range(self.board_size):
                 if self.check_in_board(i,j)==False:
                     self.board[i][j]=1
-        counter=2
-        i=rand.randint(0,self.board_size-1)
-        j=rand.randint(0,self.board_size-1)
-        val=rand.randint(1,2)
-        while counter!=0:
-            if(self.check_in_board(i,j)==True):
-                self.board[i][j]=val*2
-                counter-=1
-                # print(i,j)
-            i=rand.randint(0,self.board_size-1)
-            j=rand.randint(0,self.board_size-1)
-            val=rand.randint(1,2)
+        self.spawn_new_piece()
+        self.spawn_new_piece()
         self.score=0
-        self.max_invalid=0
-        return self.board
 
-    def print_board(self):
-        for i in self.board:
-            row=''
+    def get_free_squares(self):
+        free_squares = []
+        for i in range(self.board_size):
             for j in range(self.board_size):
-                if i[j]==1:
-                    row+="  "
-                else:
-                    row+=str(i[j])+" "
-            print(row)
+                if self.board[i][j] == 0:
+                    free_squares.append([i, j])
 
+        if free_squares == []:
+            return None
+        return free_squares
 
     def get_next_state(self,move):
-        board=self.board
-        self.make_a_move(move)
-        return_board=self.board
-        self.board=board
-        return move,return_board
+        clone_game=self.clone()
+        clone_game.make_a_move(move)
+        return move,clone_game.board
 
     def get_next_states(self):
         state=[]
         for i in self.posible_moves():
             state.append(self.get_next_state(i))
         return state 
-    #Get the state of the game 
-    def get_state(self):
-        return_board=[]
-        new_board=self.board.reshape(self.board_size**2)
-        for i in new_board:
-            if i!=0:
-                return_board.append(math.log2(i))
-            else:
-                return_board.append(i)
-        return_board=np.array(return_board)
-        return (return_board/max(return_board)).reshape(self.board_size**2)
+    #Get the state of the game
 
-    def get_state_predict(self):
-        return self.board.reshape(1,self.board_size**2)
 
     """
-    Create a variable that give a procent for spaw of a piece 80% for a 2 and 20% for a 4 
+    Create a variable that give a procent for spaw of a piece 90% for a 2 and 10% for a 4 
     Get random values for i,j and check if it's in bounderies and if it's a free place
     than place it, else retry
     """ 
     def spawn_new_piece(self):
-        change_piece= rand.randint(0,100)
-        if(change_piece<=80):
-            piece=1
-        else:
-            piece=2
-        counter=1
-        i=rand.randint(0,self.board_size-1)
-        j=rand.randint(0,self.board_size-1)
-        while counter!=0:
-            if(self.check_in_board(i,j)==True and self.board[i][j]==0):
-                self.board[i][j]=piece*2
-                counter-=1
-            i=rand.randint(0,self.board_size-1)
-            j=rand.randint(0,self.board_size-1)
+        spaces = self.get_free_squares()
+        if(spaces != None):
+            i, j = r.choice(spaces)
+            self.board[i][j] = 2 if r.random() < 0.9 else 4
 
     def make_a_move(self,direction):
-        ''' "0" -> up \n
-            "1" -> right \n
-            "2" -> down \n
-            "3" -> left \n
-            return next state and if the game is over or not 
-        '''
-        # print(direction)
-        valid_move=True
-        if(self.check_valid_move(direction)!=False):
-            reward=0
-            self.max_invalid=0
-            if(direction==0):
-                #up
-                # print("UP")
-                for j in range (self.board_size):
-                    for i in range(1,self.board_size):
-                        if(self.board[i][j]!=0 and self.board[i][j]!=1  and i!=0 and self.board[i-1][j]!=1 ):
-                            newPozI=i-1
-                            '''While you it can move to a specific direction move  '''
-                            while (
-                                self.board[newPozI][j]==0 and \
-                                self.board[newPozI][j]!=1 and \
-                                newPozI>0
-                                ):
-                                newPozI-=1
-                            ''' If it hits something verifi if it's same number piece, out of the table or wall '''
-                            if self.board[i][j]==self.board[newPozI][j]:
-                                self.board[newPozI][j]*=2
-                                reward+=self.board[newPozI][j]
-                                self.board[i][j]=0
-                            elif self.board[newPozI][j]==0:
-                                self.board[newPozI][j]=self.board[i][j]
-                                self.board[i][j]=0
-                            else:
-                                if newPozI+1!=i:
-                                    self.board[newPozI+1][j]=self.board[i][j]
-                                    self.board[i][j]=0
-            elif(direction==1):
-                #right
-                # print("RIGHT")
-                for i in range(self.board_size):
-                    for j in range (self.board_size-2,-1,-1):
-                        if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i][j+1]!=1 and j!=self.board_size-1):
-                            newPozJ=j+1
-                            while (
-                                self.board[i][newPozJ]==0 and \
-                                self.board[i][newPozJ]!=1 and\
-                                newPozJ<self.board_size-1
-                                ):
-                                newPozJ+=1
-                            if self.board[i][newPozJ]==self.board[i][j]:
-                                self.board[i][newPozJ]*=2
-                                reward+=self.board[i][newPozJ]
-                                self.board[i][j]=0
-                            elif self.board[i][newPozJ]==0:
-                                self.board[i][newPozJ]=self.board[i][j]
-                                self.board[i][j]=0
-                            else:
-                                if newPozJ-1!=j:
-                                    self.board[i][newPozJ-1]=self.board[i][j]
-                                    self.board[i][j]=0
-            elif direction==2:
-                #down
-                # print("DOWN")
-                for j in range (self.board_size):
-                    for i in range(self.board_size-2,-1,-1):
-                        if(self.board[i][j]!=0 and self.board[i][j]!=1 and self.board[i+1][j]!=1 ):
-                            newPozI=i+1
-                            # print("This is the element ",self.board[i][j],i,j)
-                            while (
-                                self.board[newPozI][j]==0 and\
-                                self.board[newPozI][j]!=1 and \
-                                newPozI<self.board_size-1
-                                ):
-                                newPozI+=1
-                            if self.board[i][j]==self.board[newPozI][j]:
-                                self.board[newPozI][j]*=2
-                                reward+=self.board[newPozI][j]
-                                self.board[i][j]=0
-                            elif self.board[newPozI][j]==0:
-                                self.board[newPozI][j]=self.board[i][j]
-                                self.board[i][j]=0
-                            else:
-                                if newPozI-1!=i:
-                                    self.board[newPozI-1][j]=self.board[i][j]
-                                    self.board[i][j]=0
-            elif direction==3:
-                # print("LEFT")
-                for i in range(self.board_size):
-                    for j in range (1,self.board_size):
-                        if(self.board[i][j]!=0 and self.board[i][j]!=1  and j!=0 and self.board[i][j-1]!=1 ):
-                            newPozJ=j-1
-                            # print("This is the element ",self.board[i][j],i,j)
-                            while (
-                                self.board[i][newPozJ]==0 and\
-                                self.board[i][newPozJ]!=1 and \
-                                newPozJ>0
-                                ):
+        move_reward = 0
+        if direction == 3:
+            for i in range(self.board_size):
+                self.board[i], reward = self.slide(self.board[i])
+                move_reward += reward
+        if direction == 0:
+            for i in range(self.board_size):
+                self.board[:, i], reward = self.slide(self.board[:, i])
+                move_reward += reward
+        if direction == 1:
+            self.board = n.flip(self.board)
+            for i in range(self.board_size):
+                self.board[i], reward = self.slide(self.board[i])
+                move_reward += reward
+            self.board = n.flip(self.board)
+        if direction == 2:
+            self.board = n.flip(self.board)
+            for i in range(self.board_size):
+                self.board[:, i], reward = self.slide(self.board[:, i])
+                move_reward += reward
+            self.board = n.flip(self.board)
 
-                                newPozJ-=1
-                            if self.board[i][newPozJ]==self.board[i][j]:
-                                self.board[i][newPozJ]*=2
-                                reward+=self.board[i][newPozJ]
-                                self.board[i][j]=0
-                            elif self.board[i][newPozJ]==0:
-                                self.board[i][newPozJ]=self.board[i][j]
-                                self.board[i][j]=0
-                            else:
-                                if newPozJ+1!=j:
-                                    self.board[i][newPozJ+1]=self.board[i][j]
-                                    self.board[i][j]=0
-            if valid_move==True:    
-                self.spawn_new_piece()
-            self.score+=reward
-            game_over=False
-            if len(self.posible_moves())==0:
-                game_over=True
-            return reward,game_over
-        else:
-            self.max_invalid+=1
-            if(self.max_invalid==10):
-                return -4,True
-            else:
-                return -2,False
+        return move_reward
+    
     def get_score(self):
         return self.score
-
-    def posible_moves(self):
-        moves=[]
-        found1=True
-        found2=True
-        for j in range(self.board_size):
-            if(found1==True):
-                for i in range(1,self.board_size-1):
-                    if (self.board[i][j]==self.board[i+1][j] or self.board[i][j]==self.board[i-1][j])\
-                        and self.board[i][j]!=1 or self.board[i][j]==0 or self.board[i+1][j]==0 or self.board[i-1][j]==0 :
-                        moves.append(0)
-                        moves.append(2)
-                        found1=False
-                        break
-            else:
-                break
-        for i in range(self.board_size):
-            if(found2==True):
-                for j in range(1,self.board_size-1):
-                    if (self.board[i][j]==self.board[i][j+1] or self.board[i][j]==self.board[i][j-1])\
-                        and self.board[i][j]!=1 or self.board[i][j]==0 or self.board[i][j+1]==0 or self.board[i][j-1]==0:
-                        moves.append(1)
-                        moves.append(3)
-                        found2=False
-                        break
-            else:
-                break
-        return sorted(moves)
     
-    def check_valid_move(self,move):
-        if move in self.posible_moves():
-            return True
-        else :
-            return False
+    def slide(self,row):
+        prev = -1
+        new_row = [0]*len(row)
+        i = 0
+        row_reward = 0
+        for index, element in enumerate(row):
+            if element != 0 and element != 1:
+                if prev == -1:
+                    prev = element
+                    new_row[i] = element
+                    i += 1
+                elif prev == element:
+                    new_row[i-1] = 2*prev
+                    row_reward += new_row[i-1]
+                    prev = -1
+                else:
+                    new_row[i] = element
+                    prev = element
+                    i += 1
+            elif element == 1:
+                new_row[index] = 1
+                i = index+1
+                prev=-1
+        return new_row, row_reward
+    
+    def possible_moves(self):
+        moves = []
+        for i in range(4):
+            clone_env = self.clone()
+            clone_env.make_a_move(i)
+            if n.array_equal(self.board, clone_env.board) == False:
+                moves.append(i)
+        if moves == []:
+            return None
+        return moves
 
     def check_in_board(self, i,j):
         if((i<self.dim-1 or i>=self.board_size-self.dim+1) and (j>self.dim-1 and j<self.board_size-self.dim )):
@@ -269,20 +179,221 @@ class Board_2048:
             return False
         return True 
 
-'''
-Posible moves test
-'''
-# env.print_board()
-# env.board[0][:]=2
-# env.board[1][:]=4
-# env.board[2][:]=8
-# env.board[3][:]=16
+    def clone(self):
+        return copy.deepcopy(self)
+    
+    def game_over(self):
+        if self.possible_moves() == None:
+            return True
+        return False
+    
+    def play(self,move):
+        reward=self.make_a_move(move)
+        self.spawn_new_piece()
+        return self.game_over()
 
-# env.board=np.array([
-#     [8,32,2,8],
-#     [2,64,8,2],
-#     [16,8,32,16],
-#     [2,2,4,0]
-# ])
+    # HEURISTIC FUNCTIONS
 
-''' For random moves play'''
+    def highest_block(self,board):
+        maxim=board.argmax()
+        i=int(maxim/self.board_size)
+        j=maxim%self.board_size
+        # return i,j
+        if (i,j)==(0,0) or (i,j)==(0,self.board_size) or (i,j)==(self.board_size,0) or (i,j)==(self.board_size,self.board_size):
+            return 1000
+        else:
+            return 0 
+
+    def table_sum(self,board):
+        suma=0
+        for i in board:
+            for j in i:
+                if(j!=0 and j!=1):
+                    suma+=j
+        return suma
+
+    def can_merge(self):
+        merge=0
+        for i in range(self.board_size):
+            for j in range(self.board_size-1):
+                if(self.board[i][j]!=0 and self.board[i][j]!=1):
+                    k=j+1
+                    go=True
+                    while k<self.board_size and go:
+                        # print("fisrt go ")
+                        if self.board[i][k]==0:
+                            k+=1
+                        elif self.board[i][j]==self.board[i][k]:
+                            merge+=1
+                            go=False
+                        else:
+                            go=False
+
+        for i in range(self.board_size):
+            for j in range(self.board_size-1):
+                if(self.board[j][i]!=0 and self.board[j][i]!=1):
+                    k=j+1
+                    go=True
+                    while k<self.board_size and go:
+                        if self.board[k][i]==0:
+                            k+=1
+                        elif self.board[j][i]==self.board[k][i]:
+                            merge+=1
+                            go=False
+                        else :
+                            go=False
+        return merge
+    
+    def monotonicity(self):
+        """Monotonicity heuristic tries to ensure that the values of the tiles are all either increasing or decreasing along both the left/right and up/down directions"""
+        board = self.board
+        mono = 0
+
+        row, col = len(board), len(board[0]) if len(board) > 0 else 0
+        for r in board:
+            diff = r[0] - r[1]
+            for i in range(col - 1):
+                if (r[i] - r[i + 1]) * diff <= 0:
+                    mono += 1
+                diff = r[i] - r[i + 1]
+
+        for j in range(row):
+            diff = board[0][j] - board[1][j]
+            for k in range(col - 1):
+                if (board[k][j] - board[k + 1][j]) * diff <= 0:
+                    mono += 1
+                diff = board[k][j] - board[k + 1][j]
+
+        return mono
+
+    def smoothness(self):
+        """Smoothness heuristic measures the difference between neighboring tiles and tries to minimize this count"""
+        board = self.board
+        smoothness = 0
+
+        row, col = len(board), len(board[0]) if len(board) > 0 else 0
+        for r in board:
+            for i in range(col - 1):
+                smoothness += abs(r[i] - r[i + 1])
+                pass
+        for j in range(row):
+            for k in range(col - 1):
+                smoothness += abs(board[k][j] - board[k + 1][j])
+
+        return smoothness
+
+    def weighted_board(self):
+        """Perform point-wise product on the game board and a pre-defined weight matrix"""
+        board = self.board
+
+        result = 0
+        for i in range(len(board)):
+            for j in range(len(board)):
+                if(board[i][j]!=0 and board[i][j]!=1):
+                    result += board[i][j] * WEIGHT_MATRIX2[i][j]
+
+        # Larger result means better
+        return result
+
+    def max_tile_position(self):
+        """Return an significantly large negative when the max tile is not on the desired corner, vice versa"""
+        board = self.board
+        max_tile = max(max(board, key=lambda x: max(x)))
+
+        # Considered with the WEIGHT_MATRIX, always keep the max tile in the corner
+        if board[0][self.board_size-1] == max_tile :
+            return 10
+        else:
+            return -10
+    
+    
+    
+    def spawn_new_2_on_poz(self,i,j):
+        self.board[i][j]=2
+
+    def spawn_new_4_on_poz(self,i,j):
+        self.board[i][j]=4
+    
+    
+    def monoton(self):
+        score=0
+        for i in range(self.board_size):
+            order=True
+            for j in range(self.board_size-1):
+                if self.board[i][j]<=self.board[i][j+1]:
+                    order=False
+                    break
+            if(order==True):
+                score+=sum(self.board[i])
+            else: 
+                score-=max(self.board[i])-min(self.board[i])
+        for i in range(self.board_size):
+            order=True
+            for j in range(self.board_size-1):
+                if self.board[j][i]>=self.board[j+1][i]:
+                    order=False
+                    break
+            if(order==True):
+                score+=sum(self.board[:,i])
+            else: 
+                score-=max(self.board[:,i])-min(self.board[:,i])
+        return score
+    
+    def penality(self):
+        penality=0
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                if self.board[i][j]!=0 and self.board[i][j]!=1:
+                    if j+1<self.board_size:
+                        if self.board[i][j]>self.board[i][j+1]  and self.board[i][j+1]!=0 and self.board[i][j+1]!=1:
+                            penality+=abs(self.board[i][j]-self.board[i][j+1])
+                    if i+1<self.board_size:
+                        if self.board[i][j]<self.board[i+1][j]  and self.board[i+1][j]!=0 and self.board[i+1][j]!=1:
+                            penality+=abs(self.board[i][j]-self.board[i+1][j])
+                    if i-1>0:
+                        if self.board[i][j]>self.board[i-1][j]  and self.board[i-1][j]!=0 and self.board[i-1][j]!=1:
+                            penality+=abs(self.board[i][j]-self.board[i-1][j])
+                    if j-1>0:
+                        if self.board[i][j]<self.board[i][j-1]  and self.board[i][j-1]!=0 and self.board[i][j-1]!=1:
+                            penality+=abs(self.board[i][j]-self.board[i][j-1])
+        return penality
+
+    def eval(self):
+        board=self.board
+        heuristiac=[]
+        heuristiac.append(self.free_space(board))
+        heuristiac.append(self.weighted_board())
+        heuristiac.append(self.smoothness())
+        heuristiac.append(self.monotonicity())
+        heuristiac.append(self.max_tile_position())
+        return sum(heuristiac)
+        # return heuristiac
+    
+    def eval_2_0(self):
+        heuristic=0
+        heuristic+=self.free_space(self.board)
+        # heuristic+=int(self.max_tile_position())
+        heuristic+=self.weighted_board()
+        heuristic+=self.can_merge()
+        heuristic+=self.smoothness()
+        heuristic-=self.monotonicity()
+        # return heuristic
+        return heuristic
+    
+    def eval_3_0(self):
+        score=0
+        penality=0
+        if self.board_size!=4:
+            a = n.array([[self.board_size*j+i for i in range(self.board_size)
+                          ]for j in range(self.board_size)]
+                        )
+            WEIGHT_MATRIX = n.flip(n.flip(a), axis=1)
+
+        score = sum(sum(n.dot(self.board, WEIGHT_MATRIX)))
+        # score+=self.free_space(self.board)
+        # score+=self.can_merge()
+        # score+=self.max_tile_position()
+        # if self.game_over_function()==True:
+        #     penality+=10000
+        penality+=self.penality()
+        return score-penality
