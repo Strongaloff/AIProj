@@ -124,6 +124,22 @@ class Game_2048:
         self.spawn_new_piece()
         return self.game_over()
 
+    def playNN(self,move):
+        moves=self.possible_moves()
+        if moves!=None:
+            if move in moves:
+                reward = self.move_board(move)
+                self.score += reward
+                self.spawn_new_piece()
+                # return self.get_state(),self.eval(),self.game_over()
+                return self.board.reshape(16),self.eval(),self.game_over()
+            else :
+                # return self.get_state(),-1000,self.game_over()
+                return self.board.reshape(16),-1000,self.game_over()
+        else :
+            # return self.get_state(),self.eval(),True
+            return self.board.reshape(16),self.score(),True
+
     def get_score(self):
         return self.score
 
@@ -140,78 +156,36 @@ class Game_2048:
     def eval(self):
         score = sum(sum(self.board*WEIGHT_MATRIX))
         penality = self.penality()
-        return score-penality
+        return (score-penality)
 
     def spawn_new_piece_on_poz(self, i, j):
         self.board[i][j] = 2 if r.random() < 0.9 else 4
 
+    def get_state(self):
+        board=n.array(self.board)
+        board=board.reshape(self.size**2)
+        # board=board.reshape(1,self.size**2)
+        board=board/board.max()
+        return board
 
-class RL(object):
-    # similar ideas as above eval function
-    def __init__(self, board, rows, cols):
-        self.board = board
-        self.rows = rows
-        self.cols = cols
+    def get_next_states(self):
+        moves=self.possible_moves()
+        states=[]
+        for i in moves:
+            states.append(self.next_state(i))
+        return states
 
-    # the class arttribute is global to all instance, so it will be aliased ---> learning
-    gradientMatrix = [[4-col-row if row ==
-                       0 else 0 for col in range(4)] for row in range(4)]
+    def next_state(self,move):
+        clone_game=self.clone()
+        clone_game.move_board(move)
+        return clone_game.board,move,clone_game.eval()
 
-    def updateMatrix(self):
-        for row in range(4):
-            for col in range(4):
-                curNum = self.board[row][col]
-                RL.gradientMatrix[row][col] -= 0.1  # penalize every move used
-                if curNum != 0:
-                    RL.gradientMatrix[row][col] += 0.1 * \
-                        math.log(curNum, 10)  # learning rate = 0.1
-        print(RL.gradientMatrix)
-
-    def initializeRL():
-        # outside the self
-        RL.gradientMatrix = [[4-col-row if row ==
-                              0 else 0 for col in range(4)] for row in range(4)]
-
-    def evalRL(self):
-        # because the gradient matrix is aliased, it will learn as it goes
-        xL = highestNumLocation(self.board)
-        xES = emptySquares(self.board)
-        xMono = monotinicity(self.board)
-        xSmooth = smoothness(self.board)
-
-        xGrad = 0
-        # now compute the score
-        for row in range(4):
-            for col in range(4):
-                curNum = self.board[row][col]
-                if curNum != 0:
-                    # use log of the tile num so the score is not crazy large
-                    xGrad += math.log(curNum, 10)*RL.gradientMatrix[row][col]
-
-        wLocation = 100
-        wEmptySquare = 10
-        wMono = 1
-        wSmooth = 1
-        wGrad = 2
-
-        bias1 = 0
-        bias2 = 0
-        bias3 = 0
-        bias4 = 0
-        bias5 = 0
-        # be careful with the signs here
-        val = wLocation*(xL + bias1) + wEmptySquare*(xES + bias2) + \
-            wMono*(xMono + bias3) + wSmooth * \
-            (xSmooth + bias4) + wGrad*(xGrad + bias5)
-        print(val)
-        return val
-
-
-# env=Game_2048(4)
-# # print(env.board)
-# # RL(env.board,4,4).updateMatrix()
-
-# while len(env.get_free_squares())>0:
-#     env.spawn_new_piece()
-
-# # print(len(env.spawn_new_piece()))
+    def best_state(self):
+        states=self.get_next_states()
+        r_score=-float('inf')
+        for board,move,score in states:
+            if score>r_score:
+                r_score=score
+                r_move=move
+                r_board=board
+        return r_board,r_move,r_score
