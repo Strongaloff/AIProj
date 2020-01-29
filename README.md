@@ -14,3 +14,11 @@
     Peste aceste trei parti se adauga o parte de testare de care se va ocupa Serban Movila exact cum vrea el.  
 
 ![Arhitecture](/assets/arhitecture.png)
+
+# How to use
+    Prima oara vor trebuii instalate urmatoarele module: 
+        1.Keras
+        2.TenserFlow
+        3.Tqdm
+        4.Numpy
+    Apoi se poate rula efectiv comanda : "py Load2.py" , in cazul in care vreti sa modificati save-ul de pe care se face load aveti in acelasi fisier la linia 6(initializarea Agentului) cu oricare din fisierul models.(ei sunt antrenati crescator(0 e cel mai slab antrenat si 4 cel mai bine antrenat))

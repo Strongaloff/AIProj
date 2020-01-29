@@ -3,7 +3,7 @@ from Agent import Agent
 import numpy as n
 from tqdm import tqdm
 env= Game_2048(4)
-agent=Agent(16,True,"./models/After_0_episods.m5")
+agent=Agent(16,True,"./models/After_2_episods.m5")
 done=False
 env.reset()
 best_score=[]

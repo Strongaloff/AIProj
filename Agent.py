@@ -5,8 +5,8 @@ import random as r
 import numpy as n
 from collections import deque
 import datetime
-REPLAY_MAX_MEMORY=50_000
-MIN_REPLAY_MEMORY=1000
+REPLAY_MAX_MEMORY=50000
+MIN_REPLAY_MEMORY=100
 MINI_BATCH_SIZE=64
 DISCOUNT=0.9
 UPDATE_EVERY=1000

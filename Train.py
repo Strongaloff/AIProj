@@ -8,9 +8,9 @@ def dqn():
     env=G(4)
     agent=Agent(env.size**2)
 
-    NUMBER_OF_EPISODS=20_000
+    NUMBER_OF_EPISODS=5000
     EPSILON=1
-    EPSILON_DECAY=0.000_06
+    EPSILON_DECAY=0.00006
     EPSILON_MIN=0.1
     SAVE_EVERY=1000
     for episod in tqdm(range(NUMBER_OF_EPISODS),):
