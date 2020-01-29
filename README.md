@@ -21,4 +21,6 @@
         2.TenserFlow
         3.Tqdm
         4.Numpy
-    Apoi se poate rula efectiv comanda : "py Load2.py" , in cazul in care vreti sa modificati save-ul de pe care se face load aveti in acelasi fisier la linia 6(initializarea Agentului) cu oricare din fisierul models.(ei sunt antrenati crescator(0 e cel mai slab antrenat si 4 cel mai bine antrenat))
+    Apoi se poate rula efectiv comanda : "py Load2.py" , in cazul in care vreti sa modificati 
+    save-ul de pe care se face load aveti in acelasi fisier la linia 6(initializarea Agentului) 
+    cu oricare din fisierul models.(ei sunt antrenati crescator(0 e cel mai slab antrenat si 4 cel mai bine antrenat))
